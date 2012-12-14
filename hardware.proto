@@ -1,0 +1,21 @@
+package Hardware;
+
+
+
+message Link {
+	required int32 id1 = 1;
+	required int32 id2 = 2;
+	required int32 speed = 3;
+};
+
+message Processor {
+	required int32 id = 1;
+	required int32 speed = 2;
+	required string name = 3;
+};
+
+message Platform {
+	repeated Processor processors = 1;
+	repeated Link links = 2;
+};
+
