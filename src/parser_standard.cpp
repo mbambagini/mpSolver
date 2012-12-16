@@ -115,22 +115,3 @@ int StandardParser::getCommunicationCost (int fromTaskId, int toTaskId) const
 	return 0;
 }
 
-/*
-StandardParser::~StandardParser()
-{
-	delete[] taskColours;
-	delete[] processorTypes;
-
-	for (int i=0; i<nOfTasks; i++)
-		delete[] computationTimes[i];
-	delete[] computationTimes;
-
-	for (int i=0; i<nOfDependencies; i++) {
-		for (int j=0; j<nOfProcessors; j++)
-			delete[] dependencies[i].communicationCosts[j];
-		delete[] dependencies[i].communicationCosts;
-	}
-	delete[] dependencies;
-}
-*/
-

@@ -19,10 +19,10 @@ protected:
 	 */
 	struct processor_t {
 		int id;
-		int speed;
-		processor_t (int pID, int pSpeed) {
+//		int speed;
+		processor_t (int pID) { //, int pSpeed) {
 			id = pID;
-			speed = pSpeed;
+//			speed = pSpeed;
 		}
 	};
 
@@ -93,36 +93,15 @@ protected:
 	 */
 	processor_t* getProcessor (int id);
 
-	/*! \brief return the number of processors
-	 *
-	 */
-	int getProcessors () const {
-		return processor_list.size();
-	}
-
-	/*! \brief return the specified task
-	 *
-	 */
-	task_t* getTask (int id);
-
-	/*! \brief return the number of tasks
-	 *
-	 */
-	int getTasks () const {
-		return task_list.size();
-	}
-
 	/*! \brief return the specified dependency
 	 *
 	 */
 	dependency_t* getDependency (int id);
 
-	/*! \brief return the number of dependecies
+	/*! \brief return the task
 	 *
 	 */
-	int getDependencies () const {
-		return dependency_list.size();
-	}
+	task_t* getTask (int id);
 
 public:
 
@@ -136,13 +115,64 @@ public:
 		requiredTime = t;
 	}
 
+	/*! \brief return the number of processors
+	 *
+	 */
+	int getProcessors () const {
+		return processor_list.size();
+	}
+
+	/*! \brief return the number of tasks
+	 *
+	 */
+	int getTasks () const {
+		return task_list.size();
+	}
+
+	/*! \brief return the task's start time
+	 *
+	 */
+	int getTaskStart (int id) const {
+		for (std::list<task_t*>::const_iterator it=task_list.begin(); it!=task_list.end(); it++)
+			if ((*it)->id==id)
+				return (*it)->start;
+		return -1;
+	}
+
+	/*! \brief return the task's duration
+	 *
+	 */
+	int getTaskDuration (int id) const {
+		for (std::list<task_t*>::const_iterator it=task_list.begin(); it!=task_list.end(); it++)
+			if ((*it)->id==id)
+				return (*it)->duration;
+		return -1;
+	}
+
+	/*! \brief return the task's finish time
+	 *
+	 */
+	int getTaskStop (int id) const {
+		for (std::list<task_t*>::const_iterator it=task_list.begin(); it!=task_list.end(); it++)
+			if ((*it)->id==id)
+				return (*it)->start+(*it)->duration;
+		return -1;
+	}
+
+	/*! \brief return the number of dependecies
+	 *
+	 */
+	int getDependencies () const {
+		return dependency_list.size();
+	}
+
 	/*! \brief add a processor
 	 *	
 	 *  \param id processor ID
 	 *  \param speed processor speed
 	 */
-	void addProcessor (int id, int speed) {
-		processor_list.push_back(new processor_t(id, speed));
+	void addProcessor (int id) {//, int speed) {
+		processor_list.push_back(new processor_t(id));//, speed));
 	}
 
 	/*! \brief add a task */

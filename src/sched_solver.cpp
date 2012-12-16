@@ -67,31 +67,12 @@ void SchedulingSolver::makeConstraints ()
 {
 	//Make the tasks run on a CPU in a not overlapped way
 	//It also creates a sequence variable for each CPU
-
-
-//  for (int machine_id = 0; machine_id < machine_count; ++machine_id) {
-//    const string name = StringPrintf("Machine_%d", machine_id);
-//    DisjunctiveConstraint* const ct =
-//        solver.MakeDisjunctiveConstraint(machines_to_tasks[machine_id], name);
-//    solver.AddConstraint(ct);
-//    all_sequences.push_back(ct->MakeSequenceVar());
-//  }
-
 	for (int i=0; i<parser->getProcessors(); i++) {
-		DisjunctiveConstraint* const ct = MakeDisjunctiveConstraint(cpus_to_tasks[i], StringPrintf("cpu_%d", i));
+		DisjunctiveConstraint* const ct = MakeDisjunctiveConstraint(
+								   cpus_to_tasks[i], StringPrintf("cpu_%d", i));
 		AddConstraint(ct);
 		task_sequences[i] = ct->MakeSequenceVar();
 	}
-
-/*
-	std::vector<SequenceVar*> task_sequences;
-	for (int i=0; i<parser->getProcessors(); i++) {
-		const string name = StringPrintf("cpu_%d", i)
-		vector<IntervalVar*> mapped_task_tmp (parser->getTasks());
-		task_sequences[i] = MakeSequenceVar(cpus_to_tasks[i], name);
-		AddConstraint(MakeDisjunctiveConstraint(cpus_to_tasks[i]));
-	}
-*/
 
 	//Synchonize the task set with the actual mapped tasks.
 	for (int i_cpu=0; i_cpu<parser->getProcessors(); i_cpu++)
@@ -154,27 +135,9 @@ void SchedulingSolver::makeConstraints ()
 	//as TRUE.
 	//This causes, for the third constraint, that also the task copy in 
 	//cpus_to_tasks results active (==to be performed)
-	for (int i_task=0; i_task<parser->getTasks(); i_task++) {
+	for (int i_task=0; i_task<parser->getTasks(); i_task++)
 		AddConstraint(MakeMapDomain(task_location[i_task],
 											  tasks_to_cpus_presences[i_task]));
-	}
-
-/*
-	//colours, for each task pair featured by the same color, the related
-	//task_locations are forced to be equal
-	for (int i_task_1=0; i_task_1<(parser->getTasks()-1); i_task_1++) {
-		if (parser->getColour(i_task_1)==-1)
-			continue;
-		for (int i_task_2=i_task_1+1; i_task_2<parser->getTasks(); i_task_2++) {
-			if (parser->getColour(i_task_2)==-1)
-				continue;
-			if (parser->getColour(i_task_1)==parser->getColour(i_task_2)) {
-				AddConstraint(MakeEquality(
-							 task_location[i_task_1], task_location[i_task_2]));
-			}
-		}
-	}
-*/
 
 }
 
@@ -229,12 +192,12 @@ bool SchedulingSolver::solve ()
 
 	//---------------------------------- Log ----------------------------------
 
-	SearchMonitor* const search_log = MakeSearchLog(1000000, objective_monitor);
+	SearchMonitor* const search_log = MakeSearchLog(1, objective_monitor);
 	monitors.push_back(search_log);
 
 	//-------------------------------- Limits ---------------------------------
 
-	SearchLimit* limit = MakeTimeLimit(20000);
+//	SearchLimit* limit = MakeTimeLimit(2000000000);
 
 	//------------------------------ Container --------------------------------
 
@@ -256,29 +219,29 @@ bool SchedulingSolver::solve ()
 	return res;
 }
 
-/*
-bool sched_solver::getResult (Solution *sol)
+
+Solution SchedulingSolver::getResult ()
 {
 	if (collector==NULL || collector->solution_count()==0)
-		return false;
+		return Solution(-1,-1);
 
+	Solution s(makespan, wall_time());
 	for (int i=0; i<parser->getProcessors(); i++)
-		 sol->addProcessor(i, parser->getProcessor(i));
+		 s.addProcessor(i);
 	for (int i=0; i<parser->getTasks(); i++) {
 		int i_cpu = collector->Value(0, task_location[i]);
-		sol->addTask (i, parser->getColour(i),
-				collector->StartValue(0, tasks_to_cpus[i][i_cpu]),
-				collector->DurationValue(0, tasks_to_cpus[i][i_cpu]),
-				i_cpu);
+		s.addTask (i, collector->StartValue(0, tasks_to_cpus[i][i_cpu]),
+				collector->DurationValue(0, tasks_to_cpus[i][i_cpu]), i_cpu);
+//		s.addTask (i, parser->getColour(i),
+//				collector->StartValue(0, tasks_to_cpus[i][i_cpu]),
+//				collector->DurationValue(0, tasks_to_cpus[i][i_cpu]),
+//				i_cpu);
 	}
 	for (int i = 0; i < parser->getDependencies(); i++) {
 		int from, to;
 		parser->getDependency(i, from, to);
-		sol->addDependency(i, from, to, 0);
+		s.addDependency(i, from, to, 0);
 	}
-	sol->setSolution(makespan);
-	sol->setTime(wall_time());
-	return true;	
+	return s;
 }
-*/
 
