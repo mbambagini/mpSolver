@@ -117,8 +117,8 @@ int add_processors(Platform& hw)
 int add_links(Platform& hw)
 {
 	cout<<"ADD LINKS"<<endl;
-	for (int i=0; i<(hw.processors_size()-1); i++)
-		for (int j=i+1; j<hw.processors_size(); j++) {
+	for (int i=0; i<hw.processors_size(); i++)
+		for (int j=i; j<hw.processors_size(); j++) {
 			cout<<"Insert byte/second of the link between ";
 			cout<<i<<" and "<<j<<": ";
 			int speed;

@@ -4,13 +4,14 @@
 #include <base/commandlineflags.h>
 
 #include <iostream>
+#include <fstream>
 
 #include <parser_standard.hpp>
 #include <solution.hpp>
 
 #include <sched_solver.hpp>
 
-//#include <gnuplot_printer.hpp>
+#include <gnuplot_printer.hpp>
 
 
 DEFINE_string (taskGraphFile, "", "Problem description file [input]");
@@ -31,16 +32,22 @@ int main (int argc, char* argv[])
 //	Solution *sol = new Solugnuplot_printer();
 
 	//parse the problem
-	if (FLAGS_taskGraphFile.compare("")==0 ||
-		FLAGS_platformFile.compare("")==0 ||  parser->load(FLAGS_taskGraphFile, FLAGS_platformFile)) {
+	if (FLAGS_taskGraphFile.compare("")==0 || FLAGS_platformFile.compare("")==0
+			|| !parser->load(FLAGS_taskGraphFile, FLAGS_platformFile)) {
 		std::cout<<"ERROR"<<std::endl;
 		exit(0);
 	}
 
 	//solve and save the scheduling if possible
-	SchedulingSolver s;
-	s.setParser(parser);
-	if (s.solve()) {
+	SchedulingSolver sol;
+	sol.setParser(parser);
+	if (sol.solve()) {
+		GnuplotPrinter p;
+		Solution s = sol.getResult();
+
+		std::ofstream file("test.gpl");
+		p.print(s, file);
+		file.close();
 /*
 		s.getResult(sol);
 		if (!sol->validate(parser))
