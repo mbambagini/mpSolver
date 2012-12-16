@@ -75,7 +75,7 @@ public:
 
 	bool solve ();
 
-//	Solution getResult ();
+	Solution getResult ();
 
 	int getMakespan () {
 		return makespan;

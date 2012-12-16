@@ -29,25 +29,17 @@ LDFLAGS=-L'/usr/local/lib' -lgflags -lprotobuf -lpthread -lrt -lm \
 SRC_FILES := $(shell ls $(SRC_DIR)/*.cpp;)
 OBJ_FILES := ${SRC_FILES:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o}
 
-all: proto solver
+all: proto hardware solver
 
 solver: $(OBJ_DIR) $(OBJ_FILES)
-	$(CC) $(CFLAGS) -c prog/solver.cpp -o $(OBJ_DIR)/solver.o
-	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJ_FILES) $(OBJ_DIR)/solver.o -o $(PRG)
-
-$(OBJ_DIR):
-	@mkdir $(OBJ_DIR)
-
-$(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp
-	$(CC) $(CFLAGS) -c $< -o $@
-
-clean:
-	@rm -f $(PRG)
-	@rm -Rf $(OBJ_DIR)
+	@$(CC) $(CFLAGS) -c prog/solver.cpp -o $(OBJ_DIR)/solver.o
+	@$(CC) $(CFLAGS) $(LDFLAGS) $(OBJ_FILES) $(OBJ_DIR)/solver.o -o $(PRG)
 
 hardware: $(OBJ_DIR) $(OBJ_FILES)
 	@$(CC) -I$(INC_DIR) -c prog/hardware.cpp $(CFLAGS) -o $(OBJ_DIR)/hardware.o
+	@$(CC) -I$(INC_DIR) -c prog/hardware_viewer.cpp $(CFLAGS) -o $(OBJ_DIR)/hardware_viewer.o
 	@$(CC) $(LDFLAGS) -o hardware $(OBJ_FILES) $(OBJ_DIR)/hardware.o
+	@$(CC) $(LDFLAGS) -o hardware_viewer $(OBJ_FILES) $(OBJ_DIR)/hardware_viewer.o
 
 proto:
 	@protoc ./taskgraph.proto --cpp_out=.
@@ -56,4 +48,14 @@ proto:
 	@protoc ./hardware.proto --cpp_out=.
 	@mv hardware.pb.h inc/
 	@mv hardware.pb.cc src/hardware.pb.cpp
+
+$(OBJ_DIR):
+	@mkdir $(OBJ_DIR)
+
+$(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp
+	@$(CC) $(CFLAGS) -c $< -o $@
+
+clean:
+	@rm -f $(PRG)
+	@rm -Rf $(OBJ_DIR)
 

@@ -15,10 +15,6 @@ class StandardParser : public Parser
 
 	//tasks
 	std::vector<std::string> tasks; /*<! Number of tasks to generate */
-//	int nOfTaskColours; /*<! Number of task colours (a colour indicates a group
-//				 of tasks, which need to be allocated onto the same processor */
-//	int nOfColouredTasks; /*<! Number of coloured tasks */
-//	int *taskColours; /*<! Data structure with the task colour definition */
 	std::vector<std::vector<int> > computationTimes; /*<! Computation times for
 												  each task on each processor */
 
@@ -53,18 +49,6 @@ public:
 		return nOfProcessors;
 	}
 
-//	int getProcessor (int id) const {
-//		return processorTypes[id];
-//	}
-
-//	int getColours () const {
-//		return nOfTaskColours;
-//	}
-
-//	int getColour (int taskId) const {
-//		return taskColours[taskId];
-//	}
-
 	int getDependencies () const {
 		return dependencies.size();
 	}
@@ -77,7 +61,6 @@ public:
 
 	int getCommunicationCost (int fromTaskId, int toTaskId, int fromProcessor,
 														 int toProcessor) const;
-
 
 	virtual ~StandardParser() {};
 };
