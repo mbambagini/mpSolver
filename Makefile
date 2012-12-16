@@ -57,5 +57,7 @@ $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp
 
 clean:
 	@rm -f $(PRG)
+	@rm -f hardware
+	@rm -f hardware_viewer
 	@rm -Rf $(OBJ_DIR)
 
