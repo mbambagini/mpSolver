@@ -55,17 +55,14 @@ void GnuplotPrinter::draw_tasks (Solution& sol, ostream& file)
 	for (int i=0; i<sol.getTasks(); i++) {
 		file<<"set object "<<i+1<<" rectangle ";
 		file<<" from "<<sol.getTaskStart(i)<<",";
-//		file<<task->processorId*HEIGHT_PER_PROCESSOR;
-		file<<0*HEIGHT_PER_PROCESSOR;
+		file<<sol.getTaskProcessor(i)*HEIGHT_PER_PROCESSOR;
 		file<<" to "<<sol.getTaskStop(i)<<",";
-//		file<<task->processorId*HEIGHT_PER_PROCESSOR+HEIGHT_TASK;
-		file<<0*HEIGHT_PER_PROCESSOR+HEIGHT_TASK;
+		file<<sol.getTaskProcessor(i)*HEIGHT_PER_PROCESSOR+HEIGHT_TASK;
 		file<<" fs pattern 2";
 		file<<endl;
 		file<<"set label \""<<i<<"\\n("<<sol.getTaskDuration(i)<<")\" at ";
-		file<<sol.getTaskStop(i)/2;
-//		file<<","<<task->processorId*HEIGHT_PER_PROCESSOR+HEIGHT_TASK/2;
-		file<<","<<0*HEIGHT_PER_PROCESSOR+HEIGHT_TASK/2;
+		file<<sol.getTaskStart(i)+sol.getTaskDuration(i)/2;
+		file<<","<<sol.getTaskProcessor(i)*HEIGHT_PER_PROCESSOR+HEIGHT_TASK/2;
 		file<<" font \"Helvetica,25\""<<endl;
 	}
 }

@@ -83,10 +83,14 @@ bool Solution::validate_procs (Parser* par)
 			int location_1 = getTask(i_t_1)->processorId;
 			int start_1 = getTask(i_t_1)->start;
 			int finish_1 = start_1+getTask(i_t_1)->duration;
+			if (start_1==finish_1)
+				continue;
 			for (int i_t_2=i_t_1+1; i_t_2<getTasks(); i_t_2++) {
 				if (location_1==(getTask(i_t_2)->processorId)) {
 					int start_2 = getTask(i_t_2)->start;
 					int finish_2 = start_2+getTask(i_t_2)->duration;
+					if (start_2==finish_2)
+						continue;
 					if (! ((start_1<start_2 && finish_1<=finish_2) ||
 						  (start_1>=start_2 && finish_1>finish_2))) {
 						cerr<<"Task "<<i_t_1<<" and "<<i_t_2;
@@ -102,6 +106,7 @@ bool Solution::validate_procs (Parser* par)
 
 Solution::~Solution ()
 {
+/*
 	for (list<processor_t*>::iterator i=processor_list.begin();
 												   i!=processor_list.end(); i++)
 		delete (*i);
@@ -112,5 +117,6 @@ Solution::~Solution ()
 	for (list<dependency_t*>::iterator i=dependency_list.begin();
 												  i!=dependency_list.end(); i++)
 		delete (*i);
+*/
 }
 

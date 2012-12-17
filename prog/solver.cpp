@@ -44,7 +44,10 @@ int main (int argc, char* argv[])
 	if (sol.solve()) {
 		GnuplotPrinter p;
 		Solution s = sol.getResult();
-
+		if (s.validate(parser))
+			std::cout<<"OK"<<std::endl;
+		else
+			std::cout<<"NOT OK"<<std::endl;
 		std::ofstream file("test.gpl");
 		p.print(s, file);
 		file.close();

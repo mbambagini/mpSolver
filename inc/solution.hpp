@@ -159,6 +159,16 @@ public:
 		return -1;
 	}
 
+	/*! \brief return the task's processor
+	 *
+	 */
+	int getTaskProcessor (int id) const {
+		for (std::list<task_t*>::const_iterator it=task_list.begin(); it!=task_list.end(); it++)
+			if ((*it)->id==id)
+				return (*it)->processorId;
+		return -1;
+	}
+
 	/*! \brief return the number of dependecies
 	 *
 	 */
