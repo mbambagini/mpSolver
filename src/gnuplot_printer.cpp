@@ -8,7 +8,7 @@ using namespace std;
 #define HEIGHT_TASK 80
 
 
-void GnuplotPrinter::draw_header (Solution& sol, ostream& file)
+void GnuplotPrinter::draw_header (const Solution& sol, ostream& file)
 {
 	file<<"set title \""<<sol.getTime()<<"\""<<endl<<endl;
 
@@ -28,7 +28,7 @@ void GnuplotPrinter::draw_header (Solution& sol, ostream& file)
 	file<<endl<<endl;
 }
 
-void GnuplotPrinter::draw_footer (Solution& sol, ostream& file)
+void GnuplotPrinter::draw_footer (const Solution& sol, ostream& file)
 {
 	file<<"set arrow "<<sol.getDependencies()+1<<" filled from 0,0 to 0,";
 	file<<HEIGHT_PER_PROCESSOR*sol.getProcessors()<<" size 10,10 nohead"<<endl;
@@ -50,7 +50,7 @@ void GnuplotPrinter::draw_footer (Solution& sol, ostream& file)
 	file<<HEIGHT_PER_PROCESSOR*sol.getProcessors()<<"] NaN notitle"<<endl<<endl;
 }
 
-void GnuplotPrinter::draw_tasks (Solution& sol, ostream& file)
+void GnuplotPrinter::draw_tasks (const Solution& sol, ostream& file)
 {
 	for (int i=0; i<sol.getTasks(); i++) {
 		file<<"set object "<<i+1<<" rectangle ";
@@ -67,29 +67,22 @@ void GnuplotPrinter::draw_tasks (Solution& sol, ostream& file)
 	}
 }
 
-void GnuplotPrinter::draw_dependencies (Solution& sol, ostream& file)
+void GnuplotPrinter::draw_dependencies (const Solution& sol, ostream& file)
 {
 	for (int i=0; i<sol.getDependencies(); i++) {
-/*
-		dependency_t* dep = sol.getDependency(i);
-		task_t* from = sol.getTask(dep->fromTaskId);
-		task_t* to = getTask(dep->toTaskId);
-		file<<"set arrow "<<dep->id+1<<" filled ";
-		file<<" from "<<from->start+from->duration<<",";
-		file<<HEIGHT_PER_PROCESSOR*from->processorId+HEIGHT_TASK/2;
-		file<<" to "<<to->start<<",";
-		file<<HEIGHT_PER_PROCESSOR*to->processorId+HEIGHT_TASK/2;
+		int from = sol.getDependencyFrom(i);
+		int to = sol.getDependencyTo(i);
+		file<<"set arrow "<<i+1<<" filled from "<<sol.getTaskStop(from)<<",";
+		file<<HEIGHT_PER_PROCESSOR*sol.getTaskProcessor(from)+HEIGHT_TASK/2;
+		file<<" to "<<sol.getTaskStart(to)<<",";
+		file<<HEIGHT_PER_PROCESSOR*sol.getTaskProcessor(to)+HEIGHT_TASK/2;
 		file<<"size 10,10"<<endl;
-*/
 	}
 }
 
 
-void GnuplotPrinter::print (Solution& sol,  ostream& file)
+void GnuplotPrinter::print (const Solution& sol,  ostream& file)
 {
-//	ostream file;
-//	file.open(filename.c_str());
-
 	file<<"set terminal postscript eps enhanced  size 6,3.5 color"<<endl;
 	file<<"set output \"schedules.eps\""<<endl<<endl;
 
@@ -97,7 +90,5 @@ void GnuplotPrinter::print (Solution& sol,  ostream& file)
 	draw_tasks(sol, file);
 	draw_dependencies(sol, file);
 	draw_footer(sol, file);
-
-//	file.close();
 }
 

@@ -22,7 +22,7 @@ using namespace operations_research;
 class SchedulingSolver: public Solver
 {
 
-	//Original task set
+	/*! \brief Original task set */
 	std::vector<IntervalVar*> tasks;
 
 	//Other variables to model the effective tasks mapped in to the CPU.
@@ -39,11 +39,12 @@ class SchedulingSolver: public Solver
 	std::vector<std::vector<IntVar*> > tasks_to_cpus_presences;
 	std::vector<std::vector<IntVar*> > cpus_to_tasks_presences;
 
-	//The actual task allocation: this vector indicates, for each task, where
-	//it is allocated (which CPU hosts it)
+	/*! The actual task allocation: this vector indicates, for each task, where
+	 * it is allocated (which CPU hosts it)
+	 */
 	std::vector<IntVar*> task_location;
 
-	//variable used from the module which calls the shots
+	/*! \brief variable used from the module which calls the shots */
 	std::vector<SequenceVar*> task_sequences;
 
 	Parser* parser;
@@ -61,12 +62,19 @@ class SchedulingSolver: public Solver
 	//add all the required constraints
 	void makeConstraints ();
 
+	int howOftenToPrint;
+
 public:
 
 	SchedulingSolver(): Solver("Scheduler") {
 		collector = NULL;
 		makespan = -1;
 		parser = NULL;
+		howOftenToPrint = -1;
+	}
+
+	void setPrintRate (int rate) {
+		howOftenToPrint = rate;
 	}
 
 	void setParser (Parser* p) {

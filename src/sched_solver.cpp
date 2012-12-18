@@ -1,35 +1,14 @@
 #include <cstdio>
 #include <cstdlib>
-
-#include <iostream>
-
-/*
-#include <base/commandlineflags.h>
-#include <base/commandlineflags.h>
-#include <base/integral_types.h>
-#include <base/logging.h>
-#include <base/stringprintf.h>
-#include <base/strtoint.h>
-#include <base/file.h>
-#include <base/split.h>
-*/
+//#include <iostream>
 
 #include <sched_solver.hpp>
 
-
-using namespace std;
+//using namespace std;
 
 
 void SchedulingSolver::initializeVars ()
 {
-	for (int i=0; i<parser->getTasks(); i++) {
-		cout<<"Task "<<i<<":";
-		for (int j=0; j<parser->getProcessors(); j++)
-			cout<<" "<<parser->getComputationTime(i, j);
-		cout<<endl;
-	}
-	cout<<"EOH: "<<parser->getEoh()<<endl;
-
 	for (int i=0; i<parser->getTasks(); i++) {
 		tasks.push_back(MakeFixedDurationIntervalVar (
 								0, //minimum start time
@@ -101,39 +80,6 @@ void SchedulingSolver::makeConstraints ()
 						Solver::ENDS_AT_END, tasks_to_cpus[i_task][i_cpu]));
 		}
 
-/*
-	//Dependencies
-	for (int i = 0; i < parser->getDependencies(); i++) {
-		int from, to;
-		parser->getDependency(i, from, to);
-		IntervalVar* t1 = tasks[from];
-		vector<IntVar*> commCosts_task_i(parser->getProcessors()*parser->getProcessors());
-cout<<"Add constraints: "<<from<<" -> "<<to<<endl;
-		for (int i_cpu_from=0;i_cpu_from<parser->getProcessors();i_cpu_from++) {
-			for (int i_cpu_to=0; i_cpu_to<parser->getProcessors(); i_cpu_to++) {
-				IntExpr* tmp =
-					  MakeProd(tasks_to_cpus_presences[from][i_cpu_from],
-										 tasks_to_cpus_presences[to][i_cpu_to]);
-				IntExpr* tmp2 = MakeProd(tmp,
-										  parser->getCommunicationCost(from, to,
-														 i_cpu_from, i_cpu_to));
-				commCosts_task_i[i_cpu_from*parser->getProcessors()+i_cpu_to] = tmp2->Var();
-cout<<"\ton "<<i_cpu_from<<", "<<i_cpu_to<<": "<<parser->getCommunicationCost(from, to, i_cpu_from, i_cpu_to)<<endl;
-			}
-		}
-		IntVar* sum_task_i = MakeSum(commCosts_task_i)->Var();
-		for (int i_cpu_to=0; i_cpu_to<parser->getProcessors(); i_cpu_to++) {
-			IntervalVar* t2 = tasks_to_cpus[to][i_cpu_to];
-//			Constraint* prec = MakeGreaterOrEqual(t2->StartExpr()->Var(),
-//							   MakeSum(t1->EndExpr(),sum_task_i)->Var());
-			Constraint* prec = MakeLessOrEqual(
-									  MakeSum(t1->EndExpr(), sum_task_i)->Var(),
-														t2->StartExpr()->Var());
-			AddConstraint(prec);
-		}
-	}
-*/
-
 	//Dependencies
 	for (int i = 0; i < parser->getDependencies(); i++) {
 		int from, to;
@@ -151,32 +97,15 @@ cout<<"\ton "<<i_cpu_from<<", "<<i_cpu_to<<": "<<parser->getCommunicationCost(fr
 			}
 		}
 		IntVar* commCostVar = MakeSum(commCosts)->Var();
-
 		vector<IntVar*> next(parser->getProcessors());
 		for (int i_cpu=0; i_cpu<parser->getProcessors(); i_cpu++)
 			next[i_cpu] = MakeProd(tasks_to_cpus[to][i_cpu]->StartExpr()->Var(),
 									 tasks_to_cpus_presences[to][i_cpu])->Var();
 		IntVar* sum = MakeSum(next)->Var();
-
-		Constraint* prec = MakeLessOrEqual(t1->EndExpr()->Var(), MakeSum(sum, commCostVar)->Var());
+		Constraint* prec = MakeLessOrEqual(t1->EndExpr()->Var(),
+											  MakeSum(sum, commCostVar)->Var());
 		AddConstraint(prec);
 	}
-
-/*
-	//Dependencies
-	for (int i = 0; i < parser->getDependencies(); i++) {
-		int from, to;
-		parser->getDependency(i, from, to);
-		IntervalVar* t1 = tasks[from];
-		vector<IntVar*> next(parser->getProcessors());
-		for (int i_cpu=0; i_cpu<parser->getProcessors(); i_cpu++)
-			next[i_cpu] = MakeProd(tasks_to_cpus[to][i_cpu]->StartExpr()->Var(),
-									 tasks_to_cpus_presences[to][i_cpu])->Var();
-		IntVar* sum = MakeSum(next)->Var();
-		Constraint* prec = MakeLessOrEqual(t1->EndExpr()->Var(), sum);
-		AddConstraint(prec);
-	}
-*/
 
 	//Force the situation in which a mapped task is performed iif the relative
 	//presences matrix says that and viceversa
@@ -218,10 +147,8 @@ bool SchedulingSolver::solve ()
 	std::vector<SearchMonitor*> monitors;
 
 	//---------------------------- OBJECT FUNCTION ----------------------------
-
-	// Objective: minimize the makespan (maximum end times of all tasks)
-	// of the problem.
-
+	//Objective: minimize the makespan (maximum end times of all tasks)
+	//of the problem.
 	//Create an Int variable for each task to model the task termination
 	std::vector<IntVar*> task_ends;
 	for (int i = 0; i<parser->getTasks(); i++)
@@ -234,7 +161,6 @@ bool SchedulingSolver::solve ()
 	monitors.push_back(objective_monitor);
 
 	//---------------------------- DecisionBuilder ----------------------------
-
 	std::vector<DecisionBuilder*> db;
 
 	db.push_back(MakePhase(task_location, Solver::CHOOSE_MIN_SIZE_HIGHEST_MIN,
@@ -253,16 +179,14 @@ bool SchedulingSolver::solve ()
 	DecisionBuilder* const main_phase = Compose(db);
 
 	//---------------------------------- Log ----------------------------------
-
 	SearchMonitor* const search_log = MakeSearchLog(100, objective_monitor);
 	monitors.push_back(search_log);
 
 	//-------------------------------- Limits ---------------------------------
-
-//	SearchLimit* limit = MakeTimeLimit(2000000000);
+	if (howOftenToPrint>0)
+		SearchLimit* limit = MakeTimeLimit(howOftenToPrint);
 
 	//------------------------------ Container --------------------------------
-
 	Assignment* solution = MakeAssignment();
 	solution->Add(task_location);
 	for (int i=0; i<parser->getTasks(); i++) {
@@ -275,7 +199,6 @@ bool SchedulingSolver::solve ()
 	monitors.push_back(collector);
 
 	//------------------------------- Search ----------------------------------
-
 	bool res = Solve(main_phase, monitors);
 	makespan = collector->Value(0, objective_var);
 	return res;
@@ -285,29 +208,17 @@ bool SchedulingSolver::solve ()
 
 Solution SchedulingSolver::getResult ()
 {
-	if (collector==NULL || collector->solution_count()==0) {
-		cout<<"Error 1"<<endl;
+	if (collector==NULL || collector->solution_count()==0)
 		return Solution(-1,-1);
-	}
 
 	Solution s(makespan, wall_time());
-	for (int i=0; i<parser->getProcessors(); i++) {
+	for (int i=0; i<parser->getProcessors(); i++)
 		 s.addProcessor(i);
-	}
 
 	for (int i=0; i<parser->getTasks(); i++) {
 		int i_cpu = collector->Value(0, task_location[i]);
 		s.addTask (i, collector->StartValue(0, tasks_to_cpus[i][i_cpu]),
 				collector->DurationValue(0, tasks_to_cpus[i][i_cpu]), i_cpu);
-
-cout<<"Task "<<i<<": ("<<collector->StartValue(0, tasks_to_cpus[i][i_cpu]);
-cout<<", "<<collector->DurationValue(0, tasks_to_cpus[i][i_cpu])+collector->StartValue(0, tasks_to_cpus[i][i_cpu]);
-cout<<") on "<<i_cpu<<endl;
-
-//		s.addTask (i, parser->getColour(i),
-//				collector->StartValue(0, tasks_to_cpus[i][i_cpu]),
-//				collector->DurationValue(0, tasks_to_cpus[i][i_cpu]),
-//				i_cpu);
 	}
 
 	for (int i = 0; i < parser->getDependencies(); i++) {
