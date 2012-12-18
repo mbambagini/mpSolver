@@ -4,7 +4,7 @@
 #include <parser.hpp>
 
 #include <string>
-#include <list>
+#include <vector>
 
 /*! \brief This class stores a schedule
  *
@@ -19,10 +19,8 @@ protected:
 	 */
 	struct processor_t {
 		int id;
-//		int speed;
-		processor_t (int pID) { //, int pSpeed) {
+		processor_t (int pID) {
 			id = pID;
-//			speed = pSpeed;
 		}
 	};
 
@@ -61,13 +59,13 @@ protected:
 private:
 
 	/*! \brief Processor set */
-	std::list<processor_t*> processor_list;
+	std::vector<processor_t> processors;
 
 	/*! \brief Task set */
-	std::list<task_t*> task_list;
+	std::vector<task_t> tasks;
 
 	/*! \brief Dependency set */
-	std::list<dependency_t*> dependency_list;
+	std::vector<dependency_t> dependencies;
 
 	/*! \brief Makespan */
 	int duration;
@@ -76,32 +74,13 @@ private:
 	double requiredTime;
 
 	/*! \brief Check dependencies */
-	bool validate_deps (Parser* par);
+	bool validate_deps (Parser* par) const;
 
 	/*! \brief Check task durations */
-	bool validate_tasks (Parser* par);
+	bool validate_tasks (Parser* par) const;
 
 	/*! \brief Check task overlapping */
-	bool validate_procs (Parser* par);
-
-protected:
-
-	/*! \brief return the specified processor
-	 *
-	 *  \param id desired processor ID
-	 *  \return the desired processor
-	 */
-	processor_t* getProcessor (int id);
-
-	/*! \brief return the specified dependency
-	 *
-	 */
-	dependency_t* getDependency (int id);
-
-	/*! \brief return the task
-	 *
-	 */
-	task_t* getTask (int id);
+	bool validate_procs (Parser* par) const;
 
 public:
 
@@ -115,85 +94,92 @@ public:
 		requiredTime = t;
 	}
 
+	virtual ~Solution() {}
+
+/**************************** INFORMATION RETRIEVAL ***************************/
+
 	/*! \brief return the number of processors
 	 *
 	 */
 	int getProcessors () const {
-		return processor_list.size();
+		return processors.size();
 	}
 
 	/*! \brief return the number of tasks
 	 *
 	 */
 	int getTasks () const {
-		return task_list.size();
+		return tasks.size();
 	}
 
 	/*! \brief return the task's start time
 	 *
 	 */
 	int getTaskStart (int id) const {
-		for (std::list<task_t*>::const_iterator it=task_list.begin(); it!=task_list.end(); it++)
-			if ((*it)->id==id)
-				return (*it)->start;
-		return -1;
+		return tasks[id].start;
 	}
 
 	/*! \brief return the task's duration
 	 *
 	 */
 	int getTaskDuration (int id) const {
-		for (std::list<task_t*>::const_iterator it=task_list.begin(); it!=task_list.end(); it++)
+		return tasks[id].duration;
+/*
+		for (std::list<task_t*>::const_iterator it=task_list.begin();
+													  it!=task_list.end(); it++)
 			if ((*it)->id==id)
 				return (*it)->duration;
 		return -1;
+*/
 	}
 
 	/*! \brief return the task's finish time
 	 *
 	 */
 	int getTaskStop (int id) const {
-		for (std::list<task_t*>::const_iterator it=task_list.begin(); it!=task_list.end(); it++)
+		return tasks[id].start+tasks[id].duration;
+/*
+		for (std::list<task_t*>::const_iterator it=task_list.begin();
+													  it!=task_list.end(); it++)
 			if ((*it)->id==id)
 				return (*it)->start+(*it)->duration;
 		return -1;
+*/
 	}
 
 	/*! \brief return the task's processor
 	 *
 	 */
 	int getTaskProcessor (int id) const {
-		for (std::list<task_t*>::const_iterator it=task_list.begin(); it!=task_list.end(); it++)
+		return tasks[id].processorId;
+/*
+		for (std::list<task_t*>::const_iterator it=task_list.begin();
+													  it!=task_list.end(); it++)
 			if ((*it)->id==id)
 				return (*it)->processorId;
 		return -1;
+*/
 	}
 
 	/*! \brief return the number of dependecies
 	 *
 	 */
 	int getDependencies () const {
-		return dependency_list.size();
+		return dependencies.size();
 	}
 
-	/*! \brief add a processor
-	 *	
-	 *  \param id processor ID
-	 *  \param speed processor speed
+	/*! \brief return the number of dependecies
+	 *
 	 */
-	void addProcessor (int id) {//, int speed) {
-		processor_list.push_back(new processor_t(id));//, speed));
+	int getDependencyFrom (int id) const {
+		return dependencies[id].fromTaskId;
 	}
 
-	/*! \brief add a task */
-	void addTask (int id, int start, int duration, int processorId) {
-		task_list.push_back(new task_t(id, start, duration, processorId));
-	}
-
-	/*! \brief add a dependency */
-	void addDependency (int id, int fromTaskId, int toTaskId, int duration) {
-		dependency_list.push_back(new dependency_t(id, fromTaskId, toTaskId,
-																	 duration));
+	/*! \brief return the number of dependecies
+	 *
+	 */
+	int getDependencyTo (int id) const {
+		return dependencies[id].toTaskId;
 	}
 
 	/*! \brief Return the makespan, which is the shortest found
@@ -204,17 +190,40 @@ public:
 
 	/*! \brief return the amount of time taken to find the actual solution (s)
 	 */
-	double getTime() {
+	double getTime() const {
 		return requiredTime;
 	}
+
+/***************************** INFORMATION SETTING ****************************/
+
+	/*! \brief add a processor
+	 *	
+	 *  \param id processor ID
+	 *  \param speed processor speed
+	 */
+	void addProcessor (int id) {//, int speed) {
+		processors.push_back(processor_t(id));//, speed));
+	}
+
+	/*! \brief add a task */
+	void addTask (int id, int start, int duration, int processorId) {
+		tasks.push_back(task_t(id, start, duration, processorId));
+	}
+
+	/*! \brief add a dependency */
+	void addDependency (int id, int fromTaskId, int toTaskId, int duration) {
+		dependencies.push_back(dependency_t(id, fromTaskId, toTaskId, duration));
+	}
+
+
+/********************************* VALIDATION *********************************/
+
 
 	/*! \brief check if the actual solution is valid or not
 	 *
 	 */
-	virtual bool validate (Parser* par);
+	virtual bool validate (Parser* par) const;
 
-
-	virtual ~Solution();
 };
 
 #endif //__SOLUTION_H__

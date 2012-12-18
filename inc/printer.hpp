@@ -10,7 +10,7 @@ class Printer
 
 public:
 
-	virtual void print (Solution& sol,  std::ostream& file) = 0;
+	virtual void print (const Solution& sol,  std::ostream& file) = 0;
 
 };
 
