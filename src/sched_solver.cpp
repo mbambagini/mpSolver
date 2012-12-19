@@ -1,6 +1,6 @@
 #include <cstdio>
 #include <cstdlib>
-//#include <iostream>
+#include <iostream>
 
 #include <sched_solver.hpp>
 
@@ -219,6 +219,10 @@ Solution SchedulingSolver::getResult ()
 		int i_cpu = collector->Value(0, task_location[i]);
 		s.addTask (i, collector->StartValue(0, tasks_to_cpus[i][i_cpu]),
 				collector->DurationValue(0, tasks_to_cpus[i][i_cpu]), i_cpu);
+std::cout<<"Task: "<<i<<" ("<<collector->StartValue(0, tasks_to_cpus[i][i_cpu]);
+std::cout<<","<<collector->DurationValue(0, tasks_to_cpus[i][i_cpu])<<",";
+std::cout<<collector->StartValue(0, tasks_to_cpus[i][i_cpu])+
+collector->DurationValue(0, tasks_to_cpus[i][i_cpu])<<")"<<std::endl;
 	}
 
 	for (int i = 0; i < parser->getDependencies(); i++) {
