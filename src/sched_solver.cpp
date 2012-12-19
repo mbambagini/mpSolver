@@ -90,22 +90,32 @@ void SchedulingSolver::makeConstraints ()
 			for (int i_to=0; i_to<parser->getProcessors(); i_to++) {
 				IntExpr* tmp = MakeProd(tasks_to_cpus_presences[from][i_from],
 											 tasks_to_cpus_presences[to][i_to]);
-				IntExpr* tmp2 = MakeProd(tmp,
-										  parser->getCommunicationCost(from, to,
-														 i_from, i_to));
+				IntExpr* tmp2 = MakeProd(tmp, parser->getCommunicationCost(from,
+															 to, i_from, i_to));
 				commCosts.push_back(tmp2->Var());
 			}
 		}
 		IntVar* commCostVar = MakeSum(commCosts)->Var();
+
+		//with a single constraints for each dependency
 		vector<IntVar*> next(parser->getProcessors());
 		for (int i_cpu=0; i_cpu<parser->getProcessors(); i_cpu++)
 			next[i_cpu] = MakeProd(tasks_to_cpus[to][i_cpu]->StartExpr()->Var(),
 									 tasks_to_cpus_presences[to][i_cpu])->Var();
 		IntVar* sum = MakeSum(next)->Var();
-		Constraint* prec = MakeLessOrEqual(t1->EndExpr()->Var(),
-											  MakeSum(sum, commCostVar)->Var());
+		Constraint* prec = MakeLessOrEqual(MakeSum(t1->EndExpr()->Var(), commCostVar)->Var(), sum);
 		AddConstraint(prec);
 	}
+
+/*
+	for (int i_cpu_to=0; i_cpu_to<parser->getProcessors(); i_cpu_to++) {
+		IntervalVar* t2 = tasks_to_cpus[to][i_cpu_to];
+		Constraint* prec = MakeLessOrEqual(
+								  MakeSum(t1->EndExpr(), sum_task_i)->Var(),
+													t2->StartExpr()->Var());
+		AddConstraint(prec);
+	}
+*/
 
 	//Force the situation in which a mapped task is performed iif the relative
 	//presences matrix says that and viceversa

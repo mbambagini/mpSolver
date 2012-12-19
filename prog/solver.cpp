@@ -48,9 +48,11 @@ int main (int argc, char* argv[])
 			std::cout<<"OK"<<std::endl;
 		else
 			std::cout<<"NOT OK"<<std::endl;
-		std::ofstream file("test.gpl");
-		p.print(s, file);
-		file.close();
+		if (FLAGS_outputFile.compare("")!=0) {
+			std::ofstream file(FLAGS_outputFile.c_str());
+			p.print(s, file);
+			file.close();
+		}
 /*
 		s.getResult(sol);
 		if (!sol->validate(parser))
