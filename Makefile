@@ -1,4 +1,4 @@
-OR_PATH = /home/mario/Scrivania/or-tools/
+OR_PATH = /home/mario/Scrivania/or-tools-read-only/
 CC		= g++
 PRG		= solver
 SRC_DIR	= ./src
