@@ -1,9 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-
 #include <limits>
-
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -12,27 +10,27 @@
 #include <gflags/gflags.h>
 
 
-
 using namespace std;
-
-
 using namespace Hardware;
 
 
 DEFINE_string(binaryFile, "", "Binary output file");
 
 
-
+/*! \brief add the deployed processors
+ *
+ */
 int add_processors(Platform& hw);
 
+
+/*! \brief add links between every processor pairs
+ *
+ */
 int add_links(Platform& hw);
-
-
 
 
 int main (int argc, char* argv[])
 {
-
 	//check parameters
 	google::ParseCommandLineFlags(&argc, &argv, false);
 
@@ -53,25 +51,9 @@ int main (int argc, char* argv[])
 		cerr<<"Data not valid."<<endl;
 		return -2;
 	}
-/*
-	//output - plain text file
-	if (FLAGS_plainTextFile.compare("")) {
-		FileHardwareSerializer ser;
-		fstream output(FLAGS_plainTextFile.c_str(), ios::out | ios::trunc);
-		ser.serialize(output, hw);
-		output.close();
-	}
 
-	//output - graphviz
-	if (FLAGS_graphvizFile.compare("")) {
-		GraphvizHardwareSerializer ser;
-		fstream output(FLAGS_graphvizFile.c_str(), ios::out | ios::trunc);
-		ser.serialize(output, hw);
-		output.close();
-	}
-*/
 	//output - serialization
-	fstream output(FLAGS_binaryFile.c_str(), ios::out | ios::trunc | ios::binary);
+	fstream output(FLAGS_binaryFile.c_str(), ios::out|ios::trunc|ios::binary);
 	if (!hw.SerializeToOstream(&output)) {
 		cerr << "Failed to serialize." << endl;
 		return -1;
@@ -81,7 +63,6 @@ int main (int argc, char* argv[])
 
 	return 0;
 }
-
 
 
 int add_processors(Platform& hw)
@@ -111,7 +92,6 @@ int add_processors(Platform& hw)
 
 	return 1;
 }
-
 
 
 int add_links(Platform& hw)

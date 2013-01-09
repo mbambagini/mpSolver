@@ -3,7 +3,7 @@
 
 #include <printer.hpp>
 
-/*! \brief Generate a Gnuplot script to represent the scheduling
+/*! \brief Generate a Gnuplot script representing the schedule
  *
  * \author Mario Bambagini
  */

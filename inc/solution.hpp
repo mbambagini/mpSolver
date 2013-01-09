@@ -6,7 +6,8 @@
 #include <string>
 #include <vector>
 
-/*! \brief This class stores a schedule
+
+/*! \brief This class stores the resulting schedule
  *
  * \author Mario Bambagini
  */
@@ -14,11 +15,11 @@ class Solution {
 
 protected:
 
-	/*! \brief 
+	/*! \brief available processor
 	 *
 	 */
 	struct processor_t {
-		int id;
+		int id; /*!< processor ID */
 		processor_t (int pID) {
 			id = pID;
 		}
@@ -28,11 +29,13 @@ protected:
 	 *
 	 */
 	struct task_t {
-		int id;
-		int start;
-		int duration;
-		int processorId;
-		task_t (int tID, int tStart, int tDur, int tProc) {
+		std::string name; /*!< task name */
+		int id; /*!< task ID */
+		int start; /*!< task start time */
+		int duration; /*!< task duration */
+		int processorId; /*!< processor ID where the task is allocated on */
+		task_t (std::string tname, int tID, int tStart, int tDur, int tProc) {
+			name = tname;
 			id = tID;
 			start = tStart;
 			duration = tDur;
@@ -44,10 +47,10 @@ protected:
 	 *
 	 */
 	struct dependency_t {
-		int id;
-		int fromTaskId;
-		int toTaskId;
-		int overhead;
+		int id; /*!< dependency ID */
+		int fromTaskId; /*!< source task ID */
+		int toTaskId; /*!< destination task ID */
+		int overhead; /*!< communication overhead */
 		dependency_t (int dID, int dFrom, int dTo, int dOverhead) {
 			id = dID;
 			fromTaskId = dFrom;
@@ -67,19 +70,28 @@ private:
 	/*! \brief Dependency set */
 	std::vector<dependency_t> dependencies;
 
-	/*! \brief Makespan */
+	/*! \brief Final makespan */
 	int duration;
 
 	/*! \brief Elapsed time for searching the solution */
 	double requiredTime;
 
-	/*! \brief Check dependencies */
+	/*! \brief Check dependency correctness
+	 *
+	 *  \return true if dependencies are satisfied, false otherwise
+	 */
 	bool validate_deps (Parser* par) const;
 
-	/*! \brief Check task durations */
+	/*! \brief Check task durations
+	 *
+	 *  \return true if task durations are correct, false otherwise
+	 */
 	bool validate_tasks (Parser* par) const;
 
-	/*! \brief Check task overlapping */
+	/*! \brief Check task overlapping
+	 *
+	 *  \return true if there are not task overlappings, false otherwise
+	 */
 	bool validate_procs (Parser* par) const;
 
 public:
@@ -94,7 +106,11 @@ public:
 		requiredTime = t;
 	}
 
+	/*! \brief Destructor
+	 *
+	 */
 	virtual ~Solution() {}
+
 
 /**************************** INFORMATION RETRIEVAL ***************************/
 
@@ -112,6 +128,20 @@ public:
 		return tasks.size();
 	}
 
+	/*! \brief return the number of dependecies
+	 *
+	 */
+	int getDependencies () const {
+		return dependencies.size();
+	}
+
+	/*! \brief return the task's name
+	 *
+	 */
+	std::string getTaskName (int id) const {
+		return tasks[id].name;
+	}
+
 	/*! \brief return the task's start time
 	 *
 	 */
@@ -124,13 +154,6 @@ public:
 	 */
 	int getTaskDuration (int id) const {
 		return tasks[id].duration;
-/*
-		for (std::list<task_t*>::const_iterator it=task_list.begin();
-													  it!=task_list.end(); it++)
-			if ((*it)->id==id)
-				return (*it)->duration;
-		return -1;
-*/
 	}
 
 	/*! \brief return the task's finish time
@@ -138,13 +161,6 @@ public:
 	 */
 	int getTaskStop (int id) const {
 		return tasks[id].start+tasks[id].duration;
-/*
-		for (std::list<task_t*>::const_iterator it=task_list.begin();
-													  it!=task_list.end(); it++)
-			if ((*it)->id==id)
-				return (*it)->start+(*it)->duration;
-		return -1;
-*/
 	}
 
 	/*! \brief return the task's processor
@@ -152,20 +168,6 @@ public:
 	 */
 	int getTaskProcessor (int id) const {
 		return tasks[id].processorId;
-/*
-		for (std::list<task_t*>::const_iterator it=task_list.begin();
-													  it!=task_list.end(); it++)
-			if ((*it)->id==id)
-				return (*it)->processorId;
-		return -1;
-*/
-	}
-
-	/*! \brief return the number of dependecies
-	 *
-	 */
-	int getDependencies () const {
-		return dependencies.size();
 	}
 
 	/*! \brief return the number of dependecies
@@ -188,26 +190,27 @@ public:
 		return duration;
 	}
 
-	/*! \brief return the amount of time taken to find the actual solution (s)
+	/*! \brief return the amount of time taken to find the actual solution
 	 */
 	double getTime() const {
 		return requiredTime;
 	}
+
 
 /***************************** INFORMATION SETTING ****************************/
 
 	/*! \brief add a processor
 	 *	
 	 *  \param id processor ID
-	 *  \param speed processor speed
 	 */
-	void addProcessor (int id) {//, int speed) {
-		processors.push_back(processor_t(id));//, speed));
+	void addProcessor (int id) {
+		processors.push_back(processor_t(id));
 	}
 
 	/*! \brief add a task */
-	void addTask (int id, int start, int duration, int processorId) {
-		tasks.push_back(task_t(id, start, duration, processorId));
+	void addTask (std::string name, int id, int start, int duration,
+															  int processorId) {
+		tasks.push_back(task_t(name, id, start, duration, processorId));
 	}
 
 	/*! \brief add a dependency */
@@ -218,13 +221,16 @@ public:
 
 /********************************* VALIDATION *********************************/
 
-
 	/*! \brief check if the actual solution is valid or not
 	 *
+	 *  \return it returns true if everything is correct, false otherwise
 	 */
-	virtual bool validate (Parser* par) const;
+	virtual bool validate (Parser* par) const {
+		return validate_deps(par) && validate_tasks(par) && validate_procs(par);
+	}
 
 };
+
 
 #endif //__SOLUTION_H__
 

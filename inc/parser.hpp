@@ -3,49 +3,57 @@
 
 #include <string>
 
+
 /*! \brief generic interface for parsing problem models
+ *
+ * This class combines the task graph and the hardware description
  *
  * author Mario Bambagini
  */
-class Parser {
+class Parser
+{
 
 public:
 
-	/*! \brief load a task graph
+	/*! \brief load task graph and hardware models
 	 *
-	 * \param taskGraph filename with the task graph (tasks and dependencies)
-	 * \param platform  filename with the hardware specifications (cores and
-	 *					links)
+	 * \param taskGraph filename containing the task graph (tasks and
+	 *							 dependencies)
+	 * \param platform  filename containing the hardware specifications (cores
+	 *					and links)
 	 * \return true if the models have been succefully loaded, false otherwise
 	 */
 	virtual bool load (std::string taskGraph, std::string platform) = 0;
+
+	/*! \brief return the 'end of horizon'
+	 *
+	 * This value is computed as the worst case execution (max task executions
+	 * and max communication delays) on a single processor
+	 */
+	virtual int getEoh () const = 0;
 
 	/*! \brief return the number of tasks
 	 *
 	 */
 	virtual int getTasks () const = 0;
 
-	/*! \brief return the 'end of horizon'
-	 *
-	 */
-	virtual int getEoh () const = 0;
-
 	/*! \brief return the number of processors
 	 *
 	 */
 	virtual int getProcessors () const = 0;
-
-	/*! \brief return the speed processortype of the specified processor
-	 *
-	 */
-//	virtual int getProcessorSpeed (int id) const = 0;
 
 	/*! \brief return the number of dependencies
 	 *
 	 */
 	virtual int getDependencies () const = 0;
 
-	/*! \brief given a dependency ID, provide the two linked tasks
+	/*! \brief return the task name
+	 *
+	 * \param id task ID
+	 */
+	virtual std::string getTask (int id) const = 0;
+
+	/*! \brief given a dependency ID, provide the two linked task IDs
 	 *
 	 * \param id dependency identificator
 	 * \param from id of the task which has to end before the start of the other
@@ -57,6 +65,10 @@ public:
 	 *
 	 *  Return the computation time of the specified task assuming that it is 
 	 *  running on the specified processor
+	 * 
+	 * \param taskId Task identifier
+	 * \param processorId Processor identificer
+	 * \return required computational time
 	 */
 	virtual int getComputationTime (int taskId, int processorId) const = 0;
 
@@ -71,14 +83,10 @@ public:
 	 * \param toTaskId id of the task which has to start later
 	 * \param fromProcessor assuming that fromTaskId runs on this processor
 	 * \param toProcessor assuming that toTaskId runs on this processor
+	 * \return communication delay for such configuration
 	 */
 	virtual int getCommunicationCost (int fromTaskId, int toTaskId,
 								  int fromProcessor, int toProcessor) const = 0;
-
-	/*! \brief return the maximum communication cost between fromTaskId and
-	 * 		   toTaskId
-	 */
-//	virtual int getCommunicationCost (int fromTaskId, int toTaskId) const = 0;
 
 	virtual ~Parser() {}
 

@@ -12,7 +12,6 @@
 
 
 using namespace std;
-
 using namespace Hardware;
 
 
@@ -42,7 +41,8 @@ int main (int argc, char* argv[])
 	cout<<"\t"<<setw(5)<<"ID"<<setw(15)<<"NAME"<<setw(10)<<"SPEED"<<endl;
 	for (int i=0; i<hw.processors_size(); i++) {
 		Processor p = hw.processors(i);
-		cout<<"\t"<<setw(5)<<p.id()<<setw(15)<<p.name()<<setw(10)<<p.speed()<<endl;
+		cout<<"\t"<<setw(5)<<p.id()<<setw(15)<<p.name()<<setw(10)<<p.speed();
+		cout<<endl;
 	}
 	cout<<endl;
 
@@ -50,7 +50,8 @@ int main (int argc, char* argv[])
 	cout<<"\t"<<setw(10)<<"FROM"<<setw(10)<<"TO"<<setw(15)<<"BANDWIDTH"<<endl;
 	for (int i=0; i<hw.links_size(); i++) {
 		Link l = hw.links(i);
-		cout<<"\t"<<setw(10)<<l.id1()<<setw(10)<<l.id2()<<setw(15)<<l.speed()<<endl;
+		cout<<"\t"<<setw(10)<<l.id1()<<setw(10)<<l.id2()<<setw(15)<<l.speed();
+		cout<<endl;
 	}
 
 	google::protobuf::ShutdownProtobufLibrary();

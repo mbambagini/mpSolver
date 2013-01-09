@@ -4,7 +4,8 @@
 #include <parser.hpp>
 #include <vector>
 
-/*! \brief parser for my standard serialization format
+
+/*! \brief Parse from protobuf models
  *
  * \todo the actual implementation is not robust at all, so be careful!
  *
@@ -14,7 +15,7 @@ class StandardParser : public Parser
 {
 
 	//tasks
-	std::vector<std::string> tasks; /*<! Number of tasks to generate */
+	std::vector<std::string> tasks; /*<! Tasks */
 	std::vector<std::vector<int> > computationTimes; /*<! Computation times for
 												  each task on each processor */
 
@@ -25,10 +26,10 @@ class StandardParser : public Parser
 
 	//dependencies
 	struct dependency {
-		int from;
-		int to;
-		std::vector<std::vector<int> > communicationCosts;
-		int maxCommunicationCost;
+		int from; /*<! from task ID */
+		int to; /*<! to task ID */
+		std::vector<std::vector<int> > communicationCosts; /*<! communication
+						  delay for each possible allocation of the two tasks */
 	};
 	std::vector<struct dependency> dependencies; /*<! The actual dependecies
 																  among tasks */
@@ -39,6 +40,10 @@ public:
 
 	int getTasks () const {
 		return tasks.size();
+	}
+
+	std::string getTask (int id) const {
+		return tasks[id];
 	}
 
 	int getEoh () const {
@@ -56,8 +61,6 @@ public:
 	void getDependency (int id, int& from, int& to) const;
 
 	int getComputationTime (int taskId, int processorId) const;
-
-	int getCommunicationCost (int fromTaskId, int toTaskId) const;
 
 	int getCommunicationCost (int fromTaskId, int toTaskId, int fromProcessor,
 														 int toProcessor) const;

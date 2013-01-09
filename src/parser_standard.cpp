@@ -64,7 +64,7 @@ bool StandardParser::load (std::string taskGraph, std::string platform)
 			continue;
 		dependencies[i].from = from;
 		dependencies[i].to = to;
-		dependencies[i].maxCommunicationCost = 0;
+		int maxCommunicationCost = 0;
 		dependencies[i].communicationCosts.resize(nOfProcessors);
 		for (int j=0; j<nOfProcessors; j++)
 			dependencies[i].communicationCosts[j].resize(nOfProcessors);
@@ -75,15 +75,15 @@ bool StandardParser::load (std::string taskGraph, std::string platform)
 			int id2 = hw.links(j).id2();
 			dependencies[i].communicationCosts[id1][id2] = val;
 			dependencies[i].communicationCosts[id2][id1] = val;
-			dependencies[i].maxCommunicationCost = max(val,
-										  dependencies[i].maxCommunicationCost);
+			maxCommunicationCost = max(val, maxCommunicationCost);
 		}
 
-		eoh += dependencies[i].maxCommunicationCost;
+		eoh += maxCommunicationCost;
 	}
 
 	return true;
 }
+
 
 void StandardParser::getDependency (int id, int& from, int& to) const
 {
@@ -91,10 +91,12 @@ void StandardParser::getDependency (int id, int& from, int& to) const
 	to = dependencies[id].to;
 }
 
+
 int StandardParser::getComputationTime (int taskId, int processorId) const
 {
 	return computationTimes[taskId][processorId];
 }
+
 
 int StandardParser::getCommunicationCost (int fromTaskId, int toTaskId,
 									   int fromProcessor, int toProcessor) const
@@ -104,14 +106,6 @@ int StandardParser::getCommunicationCost (int fromTaskId, int toTaskId,
 			return
 				 dependencies[i].communicationCosts[fromProcessor][toProcessor];
 	}
-	return 0;
-}
-
-int StandardParser::getCommunicationCost (int fromTaskId, int toTaskId) const
-{
-	for (unsigned int i=0; i<dependencies.size(); i++)
-		if (dependencies[i].from==fromTaskId && dependencies[i].to==toTaskId)
-			return dependencies[i].maxCommunicationCost;
 	return 0;
 }
 

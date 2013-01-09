@@ -1,14 +1,15 @@
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
-
 #include <sched_solver.hpp>
 
-//using namespace std;
+
+using namespace operations_research;
 
 
 void SchedulingSolver::initializeVars ()
 {
+	//Original task copy
 	for (int i=0; i<parser->getTasks(); i++) {
 		tasks.push_back(MakeFixedDurationIntervalVar (
 								0, //minimum start time
@@ -19,6 +20,7 @@ void SchedulingSolver::initializeVars ()
 								StringPrintf("Task_%d", i))); //name
 	}
 
+	//Optional tasks and presence maps
 	tasks_to_cpus.resize(parser->getTasks());
 	cpus_to_tasks.resize(parser->getTasks());
 	tasks_to_cpus_presences.resize(parser->getTasks());
@@ -47,19 +49,20 @@ void SchedulingSolver::initializeVars ()
 		}
 	}
 
+	//allocation variables
 	task_location.resize(parser->getTasks());
 	for (int i=0; i<parser->getTasks(); i++)
 		task_location[i] = MakeIntVar(0, parser->getProcessors()-1);
 
+	//sequence variables
 	task_sequences.resize(parser->getProcessors());
 }
-
 
 
 void SchedulingSolver::makeConstraints ()
 {
 	//Make the tasks run on a CPU in a not overlapped way
-	//It also creates a sequence variable for each CPU
+	//It creates a sequence variable for each CPU
 	for (int i=0; i<parser->getProcessors(); i++) {
 		DisjunctiveConstraint* ct = MakeDisjunctiveConstraint(
 								   cpus_to_tasks[i], StringPrintf("cpu_%d", i));
@@ -67,7 +70,7 @@ void SchedulingSolver::makeConstraints ()
 		AddConstraint(ct);
 	}
 
-	//Synchonize the task set with the actual mapped tasks.
+	//Synchonize the original tasks with their fake-versions
 	for (int i_cpu=0; i_cpu<parser->getProcessors(); i_cpu++)
 		for (int i_task=0; i_task<parser->getTasks(); i_task++) {
 			//STARTS_AT_START is better than STAYS_IN_SYNC because the latter
@@ -97,25 +100,15 @@ void SchedulingSolver::makeConstraints ()
 		}
 		IntVar* commCostVar = MakeSum(commCosts)->Var();
 
-		//with a single constraints for each dependency
 		vector<IntVar*> next(parser->getProcessors());
 		for (int i_cpu=0; i_cpu<parser->getProcessors(); i_cpu++)
 			next[i_cpu] = MakeProd(tasks_to_cpus[to][i_cpu]->StartExpr()->Var(),
 									 tasks_to_cpus_presences[to][i_cpu])->Var();
 		IntVar* sum = MakeSum(next)->Var();
-		Constraint* prec = MakeLessOrEqual(MakeSum(t1->EndExpr()->Var(), commCostVar)->Var(), sum);
+		Constraint* prec = MakeLessOrEqual(MakeSum(t1->EndExpr()->Var(),
+													  commCostVar)->Var(), sum);
 		AddConstraint(prec);
 	}
-
-/*
-	for (int i_cpu_to=0; i_cpu_to<parser->getProcessors(); i_cpu_to++) {
-		IntervalVar* t2 = tasks_to_cpus[to][i_cpu_to];
-		Constraint* prec = MakeLessOrEqual(
-								  MakeSum(t1->EndExpr(), sum_task_i)->Var(),
-													t2->StartExpr()->Var());
-		AddConstraint(prec);
-	}
-*/
 
 	//Force the situation in which a mapped task is performed iif the relative
 	//presences matrix says that and viceversa
@@ -139,8 +132,8 @@ void SchedulingSolver::makeConstraints ()
 	for (int i_task=0; i_task<parser->getTasks(); i_task++)
 		AddConstraint(MakeMapDomain(task_location[i_task],
 											  tasks_to_cpus_presences[i_task]));
-
 }
+
 
 bool SchedulingSolver::solve () 
 {
@@ -157,7 +150,7 @@ bool SchedulingSolver::solve ()
 	std::vector<SearchMonitor*> monitors;
 
 	//---------------------------- OBJECT FUNCTION ----------------------------
-	//Objective: minimize the makespan (maximum end times of all tasks)
+	//Objective: minimize the makespan (maximum end times of all the tasks)
 	//of the problem.
 	//Create an Int variable for each task to model the task termination
 	std::vector<IntVar*> task_ends;
@@ -165,7 +158,6 @@ bool SchedulingSolver::solve ()
 		for (int j = 0; j<parser->getProcessors(); j++)
 			task_ends.push_back(MakeProd(tasks_to_cpus[i][j]->EndExpr()->Var(),
 										 tasks_to_cpus_presences[i][j])->Var());
-
 	IntVar* objective_var = MakeMax(task_ends)->Var();
 	OptimizeVar* const objective_monitor = MakeMinimize(objective_var,1);
 	monitors.push_back(objective_monitor);
@@ -189,12 +181,13 @@ bool SchedulingSolver::solve ()
 	DecisionBuilder* const main_phase = Compose(db);
 
 	//---------------------------------- Log ----------------------------------
-	SearchMonitor* const search_log = MakeSearchLog(100, objective_monitor);
-	monitors.push_back(search_log);
+	if (howOftenToPrint>0)
+		monitors.push_back(MakeSearchLog(howOftenToPrint, objective_monitor));
+		//search_log's type: SearchMonitor* const
 
 	//-------------------------------- Limits ---------------------------------
-	if (howOftenToPrint>0)
-		SearchLimit* limit = MakeTimeLimit(howOftenToPrint);
+	if (timeLimit>0)
+		SearchLimit* limit = MakeTimeLimit(timeLimit*1000);
 
 	//------------------------------ Container --------------------------------
 	Assignment* solution = MakeAssignment();
@@ -211,36 +204,29 @@ bool SchedulingSolver::solve ()
 	//------------------------------- Search ----------------------------------
 	bool res = Solve(main_phase, monitors);
 	makespan = collector->Value(0, objective_var);
+
 	return res;
 }
-
 
 
 Solution SchedulingSolver::getResult ()
 {
 	if (collector==NULL || collector->solution_count()==0)
 		return Solution(-1,-1);
-
 	Solution s(makespan, wall_time());
 	for (int i=0; i<parser->getProcessors(); i++)
 		 s.addProcessor(i);
-
 	for (int i=0; i<parser->getTasks(); i++) {
 		int i_cpu = collector->Value(0, task_location[i]);
-		s.addTask (i, collector->StartValue(0, tasks_to_cpus[i][i_cpu]),
-				collector->DurationValue(0, tasks_to_cpus[i][i_cpu]), i_cpu);
-std::cout<<"Task: "<<i<<" ("<<collector->StartValue(0, tasks_to_cpus[i][i_cpu]);
-std::cout<<","<<collector->DurationValue(0, tasks_to_cpus[i][i_cpu])<<",";
-std::cout<<collector->StartValue(0, tasks_to_cpus[i][i_cpu])+
-collector->DurationValue(0, tasks_to_cpus[i][i_cpu])<<")"<<std::endl;
+		s.addTask (parser->getTask(i), i, collector->StartValue(0,
+													   tasks_to_cpus[i][i_cpu]),
+				   collector->DurationValue(0, tasks_to_cpus[i][i_cpu]), i_cpu);
 	}
-
 	for (int i = 0; i < parser->getDependencies(); i++) {
 		int from, to;
 		parser->getDependency(i, from, to);
 		s.addDependency(i, from, to, 0);
 	}
-
 	return s;
 }
 

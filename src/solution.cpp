@@ -6,11 +6,6 @@
 using namespace std;
 
 
-bool Solution::validate (Parser* par) const
-{
-	return validate_deps(par) && validate_tasks(par) && validate_procs(par);
-}
-
 bool Solution::validate_deps (Parser* par) const
 {
 	bool valid = true;
@@ -29,6 +24,7 @@ bool Solution::validate_deps (Parser* par) const
 	return valid;
 }
 
+
 bool Solution::validate_tasks (Parser* par) const
 {
 	bool valid = true;
@@ -43,6 +39,7 @@ bool Solution::validate_tasks (Parser* par) const
 	}
 	return valid;
 }
+
 
 bool Solution::validate_procs (Parser* par) const
 {
